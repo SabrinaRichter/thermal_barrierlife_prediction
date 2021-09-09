@@ -26,20 +26,23 @@ class ConvolutionMixedPooling(tf.keras.layers.Layer):
         for i in range(self.n_layers):
             self.fwd_pass_conv.append(
                 tf.keras.layers.Conv2D(
+                    name='conv_'+str(i),
                     filters=filters, kernel_size=kernel_size, strides=strides,
                 ))
             self.fwd_pass_avgpool.append(tf.keras.layers.AveragePooling2D(
+                name='avgpool_' + str(i),
                 pool_size=avg_pool_pool_size, strides=avg_pool_strides,
             ))
             self.fwd_pass_maxpool.append(tf.keras.layers.MaxPool2D(
+                name='maxpool_' + str(i),
                 pool_size=max_pool_pool_size, strides=max_pool_strides,
             ))
-            self.fwd_pass_mix.append(MixChannels(n_channels=2, dtype=dtype))
+            self.fwd_pass_mix.append(MixChannels(n_channels=2, dtype=dtype, name='mix_'+str(i)))
         self.flatten = tf.keras.layers.Flatten()
 
     def call(self, inputs, **kwargs):
         x = inputs
-        x = tf.expand_dims(x, axis=1)
+        x = tf.expand_dims(x, axis=3)
         for i in range(self.n_layers):
             x_conv = self.fwd_pass_conv[i](x)
             x_maxpool = self.fwd_pass_maxpool[i](x_conv)
