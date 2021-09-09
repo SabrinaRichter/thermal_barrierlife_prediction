@@ -16,7 +16,7 @@ class ModelCNN:
             max_pool_strides=2,
             avg_pool_pool_size=2,
             avg_pool_strides=2,
-            n_dense=1,
+            units_dense=[20],
             init_dense='ones',
             l1_dense=0.0,
             l2_dense=0.0,
@@ -43,7 +43,7 @@ class ModelCNN:
             avg_pool_pool_size=avg_pool_pool_size,
             avg_pool_strides=avg_pool_strides)(x)
         x = DenseEncoderDecoder(
-            units=n_dense,
+            units=units_dense,
             initializer=init_dense,
             l1_coef=l1_dense,
             l2_coef=l2_dense,

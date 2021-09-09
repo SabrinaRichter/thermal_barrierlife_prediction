@@ -255,6 +255,7 @@ class Prediction(tf.keras.layers.Layer):
                 bias_initializer=initializer,
             )
         )
+        self.split_output=split_output
 
     def call(self, inputs, **kwargs):
         x = inputs
