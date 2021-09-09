@@ -3,11 +3,11 @@ import numpy as np
 import pandas as pd
 import xarray as xr
 
-def load_data(csv_file_path='/home/polz-j/data/TBClife/train-orig.csv', tiff_folder_path='/home/polz-j/data/TBClife/train/'):
+def read_data(csv_file_path='../data/train-orig.csv', tiff_folder_path='../data/train/'):
     df_meta = pd.read_csv(csv_file_path)
     im_list = []
     for i,imid in enumerate(df_meta.Image_ID):
-        im = Image.open('/home/polz-j/data/TBClife/train/'+str(imid)+'.tif')
+        im = Image.open(tiff_folder_path+str(imid)+'.tif')
         if np.array(im).shape[1]>1024:
             im_list.append(np.array(im))
         if np.array(im).shape[1]<=1024:
@@ -23,6 +23,3 @@ def load_data(csv_file_path='/home/polz-j/data/TBClife/train-orig.csv', tiff_fol
     ds['image_id'] = 'image_id', df_meta.Image_ID
     return ds
 
-if __name__==__main__:
-    ds = load_data('/home/polz-j/data/TBClife/train-orig.csv', '/home/polz-j/data/TBClife/train/')
-    ds.to_netcdf('training_dataset_level0.nc')
