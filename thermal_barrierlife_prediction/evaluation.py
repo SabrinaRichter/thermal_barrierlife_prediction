@@ -8,12 +8,12 @@ def performance_report(y_true, y_pred):
                        }
     return performance_dict
 
-def performance_report_magnitude(y_true, y_pred, magnitude):
+def performance_report_magnitude(y_true, y_pred, magnification):
     try:
-        y_true_500 = y_true[magnitude==500]
-        y_pred_500 = y_pred[magnitude==500]
-        y_true_2000 = y_true[magnitude==2000]
-        y_pred_2000 = y_pred[magnitude==2000]
+        y_true_500 = y_true[magnification==500]
+        y_pred_500 = y_pred[magnification==500]
+        y_true_2000 = y_true[magnification==2000]
+        y_pred_2000 = y_pred[magnification==2000]
         performance_dict = {'mse':sklearn.metrics.mean_squared_error(y_true, y_pred),
                             'mse_500':sklearn.metrics.mean_squared_error(y_true_500, y_pred_500),
                             'mse_2000':sklearn.metrics.mean_squared_error(y_true_2000, y_pred_2000),
