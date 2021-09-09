@@ -9,7 +9,7 @@ class EstimatorCNN(Estimator):
         Initializes and compiles the model.
         """
 
-        input_shape = (2048, 2048)
+        input_shape = self.data.greyscale.shape[1:]
         self.model = ModelCNN(
             input_shape=input_shape,
         )

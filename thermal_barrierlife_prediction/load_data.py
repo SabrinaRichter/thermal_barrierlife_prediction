@@ -10,9 +10,9 @@ def read_data(csv_file_path=False, tiff_folder_path='../data/train/'):
         im_list = []
         for fn in fn_list:
             im = Image.open(fn)
-            if np.array(im).shape[1]>1024:
+            if np.array(im).shape==(2048,2048):
                 im_list.append(np.array(im))
-            if np.array(im).shape[1]<=1024:
+            else:
                 im = im.resize((2048,2048))
                 im_list.append(np.array(im))
         ds = xr.Dataset({'greyscale':xr.DataArray(np.array(im_list))})
@@ -28,9 +28,9 @@ def read_data(csv_file_path=False, tiff_folder_path='../data/train/'):
         im_list = []
         for imid in df_meta.Image_ID:
             im = Image.open(tiff_folder_path+str(imid)+'.tif')
-            if np.array(im).shape[1]>1024:
+            if np.array(im).shape==(2048,2048):
                 im_list.append(np.array(im))
-            if np.array(im).shape[1]<=1024:
+            else:
                 im = im.resize((2048,2048))
                 im_list.append(np.array(im))
 
@@ -41,5 +41,6 @@ def read_data(csv_file_path=False, tiff_folder_path='../data/train/'):
         ds['magnification'] = 'image_id', df_meta.Magnification
         ds['uncertainty'] = 'image_id', df_meta.Uncertainty
         ds['image_id'] = 'image_id', df_meta.Image_ID
+        
     return ds
 
