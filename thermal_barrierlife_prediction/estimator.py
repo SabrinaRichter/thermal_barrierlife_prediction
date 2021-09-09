@@ -27,6 +27,8 @@ class Estimator:
     def train(
             self,
             val_samples=[],
+            batch_size=8,
+            epochs=20,
     ):
         """
         Trains the model.
@@ -46,8 +48,11 @@ class Estimator:
         self.history = self.model.training_model.fit(
             x=X_train,
             y=y_train,
+            shuffle=True,
+            epochs=epochs,
+            batch_size=batch_size,
             validation_data=validation_data,
-            verbose=2
+            verbose=2,
         ).history
 
     def _compile_model(
@@ -65,14 +70,23 @@ class Estimator:
             ],
         )
 
-    def evaluate(
+    def compute_gradients_input(
             self,
-            keys=None,
+            image_id,
+            plot=True,
     ):
-       pass
-
-    def predict(
-            self,
-            keys=None,
-    ):
-      pass
+        """
+         Compute gradients with respect to input data. (A list of gradients per sample if target is multidimensional.)
+        """
+        input_raw = self.data.sel(image_id=image_id).greyscale.values
+        input_X = tf.convert_to_tensor(input_raw.astype('float32'))
+        input_X = tf.expand_dims(input_X, 0)
+        with tf.GradientTape(persistent=True) as g:
+            g.watch(input_X)
+            prediction = self.model.training_model(input_X)
+            gradients = g.gradient(prediction, input_X).numpy()[0]
+        if plot:
+            import matplotlib.pyplot as plt
+            plt.matshow(gradients, cmap='gray')
+            plt.matshow(input_raw, cmap='gray')
+        return prediction.numpy()[0, 0], gradients
