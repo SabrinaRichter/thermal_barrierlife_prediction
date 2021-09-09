@@ -1,8 +1,5 @@
-import tensorflow as tf
-import tensorflow.keras.backend as K
-
-from model_cnn import ModelCNN
-from estimator import Estimator
+from thermal_barrierlife_prediction.model_cnn import ModelCNN
+from thermal_barrierlife_prediction.estimator import Estimator
 
     
 class EstimatorCNN(Estimator):
@@ -12,5 +9,8 @@ class EstimatorCNN(Estimator):
         Initializes and compiles the model.
         """
 
-        self.model = ModelCNN()
+        input_shape = (2048, 2048)
+        self.model = ModelCNN(
+            input_shape=input_shape,
+        )
         self._compile_model()

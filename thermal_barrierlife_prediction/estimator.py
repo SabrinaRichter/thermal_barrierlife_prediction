@@ -1,8 +1,6 @@
-import numpy as np
 import tensorflow as tf
-from typing import Dict, List, Tuple, Union
-import warnings
 
+from thermal_barrierlife_prediction.load_data import read_data
 
 class Estimator:
     """
@@ -10,48 +8,61 @@ class Estimator:
     model initialization, training, evaluation and prediction.
     """
 
-    def __init__(self):
-        self.model = None  # TODO what is this
-
-    def get_data(
+    def prepare_data(
             self,
-            test_split=0.1,
-            validation_split=0.1,
-            train_split=None,
-            seed: int = 1,
+            csv_file_path='../data/train-orig.csv',
+            tiff_folder_path='../data/train/', # for validation: '../data/valid'
+            for_training=True, # if True, standardization parameters will be computed, if False then apply parameters computed from training data
     ):
         """
         Prepares the necessary data input for the model.
         """
-        pass
+        self.data = read_data(
+            csv_file_path=csv_file_path,
+            tiff_folder_path=tiff_folder_path,
+        )
+
+        ### augment, do whatever you want (distinguish between train and validation setting!)
 
     def train(
             self,
+            val_samples=[],
     ):
         """
-        Train model.
+        Trains the model.
         """
-        train_dataset = ...
-        eval_dataset = ...
+        self.train_data = self.data.sel(image_id=self.data.image_id[[el not in ['M-19-271'] for el in self.data.sample]])
+
+        X_train = self.train_data.greyscale.values
+        y_train = self.train_data.lifetime.values
+
+        if len(val_samples) > 0:
+            self.val_data = self.data.sel(image_id=self.data.image_id[[el in ['M-19-271'] for el in self.data.sample]])
+            validation_data = (self.val_data.greyscale.values, self.val_data.lifetime.values)
+        else:
+            self.val_data = None
+            validation_data = None
 
         self.history = self.model.training_model.fit(
-            x=train_dataset,
-            validation_data=eval_dataset,
+            x=X_train,
+            y=y_train,
+            validation_data=validation_data,
             verbose=2
         ).history
 
     def _compile_model(
             self,
-            optimizer,
     ):
         """
         Prepares the losses and metrics and compiles the model.
         """
         self.model.training_model.compile(
-            loss=loss,
-            optimizer=optimizer,
-            metrics=metrics,
-            loss_weights=loss_weights
+            loss=tf.keras.losses.mean_squared_error,
+            optimizer='adam',
+            metrics=[
+                tf.keras.metrics.mean_squared_error,
+                tf.keras.metrics.mean_absolute_error
+            ],
         )
 
     def evaluate(

@@ -1,0 +1,1 @@
+from thermal_barrierlife_prediction.estimator_cnn import EstimatorCNN
