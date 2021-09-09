@@ -1,4 +1,5 @@
 import tensorflow as tf
+import numpy as np
 
 from thermal_barrierlife_prediction.load_data import read_data
 
@@ -72,21 +73,32 @@ class Estimator:
 
     def compute_gradients_input(
             self,
-            image_id,
+            image_ids,
             plot=True,
     ):
         """
-         Compute gradients with respect to input data. (A list of gradients per sample if target is multidimensional.)
+         Computes and plots gradients with respect to input data.
         """
-        input_raw = self.data.sel(image_id=image_id).greyscale.values
-        input_X = tf.convert_to_tensor(input_raw.astype('float32'))
-        input_X = tf.expand_dims(input_X, 0)
-        with tf.GradientTape(persistent=True) as g:
-            g.watch(input_X)
-            prediction = self.model.training_model(input_X)
-            gradients = g.gradient(prediction, input_X).numpy()[0]
-        if plot:
-            import matplotlib.pyplot as plt
-            plt.matshow(gradients, cmap='gray')
-            plt.matshow(input_raw, cmap='gray')
-        return prediction.numpy()[0, 0], gradients
+        if not isinstance(image_ids, list):
+            image_ids = [image_ids]
+        predictions = []
+        gradients = []
+        for image_id in image_ids:
+            input_raw = self.data.sel(image_id=image_id).greyscale.values
+            input_X = tf.convert_to_tensor(input_raw.astype('float32'))
+            input_X = tf.expand_dims(input_X, 0)
+            with tf.GradientTape(persistent=True) as g:
+                g.watch(input_X)
+                pred = self.model.training_model(input_X)
+                grad = g.gradient(pred, input_X).numpy()[0]
+            predictions.append(pred.numpy()[0, 0])
+            gradients.append(grad)
+            if plot:
+                import matplotlib.pyplot as plt
+                fig, ax = plt.subplots(1, 2, figsize=(10, 5))
+                ax[0].matshow(np.abs(grad), cmap='gray', vmax=np.sort(np.abs(grad).flatten())[-10000])
+                ax[1].matshow(input_raw, cmap='gray', vmin=0, vmax=255)
+                ax[0].axis('off')
+                ax[1].axis('off')
+                plt.tight_layout()
+        return predictions, gradients
