@@ -28,7 +28,7 @@ class ConvolutionMixedPooling(tf.keras.layers.Layer):
                 tf.keras.layers.Conv2D(
                     filters=filters, kernel_size=kernel_size, strides=strides,
                 ))
-            self.fwd_pass_avgpool.append(tf.keras.layers.AveragePool2D(
+            self.fwd_pass_avgpool.append(tf.keras.layers.AveragePooling2D(
                 pool_size=avg_pool_pool_size, strides=avg_pool_strides,
             ))
             self.fwd_pass_maxpool.append(tf.keras.layers.MaxPool2D(
@@ -39,6 +39,7 @@ class ConvolutionMixedPooling(tf.keras.layers.Layer):
 
     def call(self, inputs, **kwargs):
         x = inputs
+        x = tf.expand_dims(x, axis=1)
         for i in range(self.n_layers):
             x_conv = self.fwd_pass_conv[i](x)
             x_maxpool = self.fwd_pass_maxpool[i](x_conv)
