@@ -8,7 +8,7 @@ def performance_report(y_true, y_pred):
                        }
     return performance_dict
 
-def performance_report_magnitude(y_true, y_pred, magnification):
+def performance_report_magnification(y_true, y_pred, magnification):
     try:
         y_true_500 = y_true[magnification==500]
         y_pred_500 = y_pred[magnification==500]
@@ -26,4 +26,4 @@ def performance_report_magnitude(y_true, y_pred, magnification):
                            }
         return performance_dict
     except:
-        print("Oops! No samples in one of the magnitude classes :( try the regular performance report")
+        print("Oops! No samples in one of the magnification classes :( try the regular performance report")
