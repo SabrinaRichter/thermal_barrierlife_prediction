@@ -55,7 +55,7 @@ class Convolution(tf.keras.layers.Layer):
 
     def call(self, inputs, **kwargs):
         x = inputs
-        x = tf.expand_dims(x, axis=3)
+        #x = tf.expand_dims(x, axis=3)
         for layer in self.fwd_pass:
             x = layer(x)
         return x

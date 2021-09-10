@@ -42,11 +42,13 @@ class ModelCNN:
             shape=input_shape,
         )
         x = input_x
+        x = tf.expand_dims(x, axis=3)
         #x = Fourier_Transformation.FourierFeatureProjection(
          #       gaussian_projection=FGF_guassian_projection,
           #      gaussian_scale=FGF_scale)(x)
-        x  = tf.keras.layers.RandomContrast(factor= (0.1,2), seed=42)
-        x = tf.keras.layers.RandomCrop(height=crop_image_size, width=crop_image_size, seed=42,training=True)(x)
+        x  = tf.keras.layers.RandomContrast(factor= (0.1,2), seed=42)(x)
+        # TODO training=True was delted as arg not recognised
+        x = tf.keras.layers.RandomCrop(height=crop_image_size, width=crop_image_size, seed=42)(x)
         
         # Pass through layer stacks
         x = Convolution(
