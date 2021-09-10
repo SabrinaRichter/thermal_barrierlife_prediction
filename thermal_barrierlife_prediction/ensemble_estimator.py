@@ -1,7 +1,8 @@
 import numpy as np
 
 from thermal_barrierlife_prediction import EstimatorCNN
-from thermal_barrierlife_prediction.evaluation import performance_report
+
+from thermal_barrierlife_prediction.evaluation import performance_report, performance_report_magnification
 from thermal_barrierlife_prediction.paralelise_utils import parallelize
 
 
@@ -10,6 +11,7 @@ class Params:
         self.val_set = val_set
         self.estimator_name = estimator_name
         self.args = args
+
 
 
 class EnsembleEstimator:
@@ -47,6 +49,7 @@ class EnsembleEstimator:
                 show_progress_bar=False,
             )()
 
+
     def _extract(self, res):
         return [i for r in res for i in r]
 
@@ -78,9 +81,10 @@ class EnsembleEstimator:
     def evaluate_models(
             self,
     ):
-        for model_type in self.estimators.keys():
-            for estim in self.estimators[model_type]:
-                y_pred = estim.predict(val_idx=estim.val_idx)  # Predicts with saved val data
-                y_true = estim.data['lifetime'][estim.val_idx]
-                y_max = estim.data['magnification'][estim.val_idx]
-                estim.performance_report = performance_report
+        for res in self.res:
+            estim=res['estim']
+            y_pred = estim.predict(val_idx=estim.val_idx)  # Predicts with saved val data
+            y_true = estim.data['lifetime'][estim.val_idx]
+            y_max = estim.data['magnification'][estim.val_idx]
+            estim.performance_report = performance_report(y_true, y_pred)
+            estim.performance_report_magnification = performance_report_magnification(y_true, y_pred, y_max)
