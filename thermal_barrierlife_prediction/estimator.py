@@ -34,16 +34,17 @@ class Estimator:
         """
         Trains the model.
         """
-        self.train_data = self.data.sel(image_id=self.data.image_id[[el not in val_samples for el in self.data.sample]])
+        self.val_id = val_samples
+        train_data = self.data.sel(image_id=self.data.image_id[[el not in val_samples for el in self.data.sample]])
 
-        X_train = self.train_data.greyscale.values
-        y_train = self.train_data.lifetime.values
+        X_train = train_data.greyscale.values
+        y_train = train_data.lifetime.values
 
         if len(val_samples) > 0:
-            self.val_data = self.data.sel(image_id=self.data.image_id[[el in val_samples for el in self.data.sample]])
-            validation_data = (self.val_data.greyscale.values, self.val_data.lifetime.values)
+            val_data = self.data.sel(image_id=self.data.image_id[[el in val_samples for el in self.data.sample]])
+            validation_data = (val_data.greyscale.values, val_data.lifetime.values)
         else:
-            self.val_data = None
+            val_data = None
             validation_data = None
 
         self.history = self.model.training_model.fit(
