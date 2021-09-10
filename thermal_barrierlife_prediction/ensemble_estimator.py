@@ -1,7 +1,7 @@
 import numpy as np
 
 from thermal_barrierlife_prediction import EstimatorCNN
-from thermal_barrierlife_prediction.evaluation import performance_report
+from thermal_barrierlife_prediction.evaluation import performance_report, performance_report_magnification
 
 
 class EnsembleEstimator:
@@ -16,7 +16,7 @@ class EnsembleEstimator:
     ):
         for val_set in val_sets:
             for estimator_name, args in estimator_args:
-                if estimator_name == 'CNN':
+                if 'CNN' in estimator_name:
                     estim = EstimatorCNN()
                 else:
                     raise ValueError('Estimator not recognized!')
@@ -39,4 +39,5 @@ class EnsembleEstimator:
                 y_pred = estim.predict(val_idx=estim.val_idx)  # Predicts with saved val data
                 y_true = estim.data['lifetime'][estim.val_idx]
                 y_max = estim.data['magnification'][estim.val_idx]
-                estim.performance_report = performance_report
+                estim.performance_report = performance_report(y_true, y_pred)
+                estim.performance_report_magnification = performance_report_magnification(y_true, y_pred, y_max)
