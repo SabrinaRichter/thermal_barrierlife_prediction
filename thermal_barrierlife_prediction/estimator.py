@@ -42,9 +42,11 @@ class Estimator:
         """
         Trains the model.
         """
+
         self.train_idx = np.argwhere([sample not in val_samples for sample in self.data['sample']]).ravel()
         self.val_idx = np.argwhere([sample in val_samples for sample in self.data['sample']]).ravel() \
             if len(val_samples) > 0 else None
+
 
         X_train = self.data['greyscale'][self.train_idx]
         y_train = self.data['lifetime'][self.train_idx]
@@ -133,7 +135,18 @@ class Estimator:
                 tf.keras.metrics.mean_absolute_error
             ],
         )
-
+        
+    def predict(self,
+                val_samples,
+    ):
+        '''
+        predicts a set of input samples
+        '''
+        if len(val_samples) > 0:
+            val_idx = np.argwhere([sample in val_samples for sample in self.data['sample']]).ravel()
+        y_pred = self.model.training_model.predict(self.data['greyscale'][val_idx])
+        return y_pred
+        
     def compute_gradients_input(
             self,
             image_ids,

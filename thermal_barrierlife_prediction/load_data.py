@@ -13,7 +13,9 @@ def read_data(csv_file_path=False, tiff_folder_path='../data/train/'):
             if np.array(im).shape == (2048, 2048):
                 im_list.append(np.array(im))
             else:
-                im = im.resize((2048, 2048))
+
+                im = im.crop([0,0,712,712])
+                im = im.resize((2048,2048))
                 im_list.append(np.array(im))
 
         # ds = build_data_xarray(images=np.array(im_list),
@@ -40,7 +42,8 @@ def read_data(csv_file_path=False, tiff_folder_path='../data/train/'):
             if np.array(im).shape == (2048, 2048):
                 im_list.append(np.array(im))
             else:
-                im = im.resize((2048, 2048))
+                im = im.crop([0,0,712,712])
+                im = im.resize((2048,2048))
                 im_list.append(np.array(im))
 
         # ds = build_data_xarray(images=np.array(im_list),
