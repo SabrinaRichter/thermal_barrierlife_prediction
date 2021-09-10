@@ -42,24 +42,10 @@ class Estimator:
         """
         Trains the model.
         """
-<<<<<<< HEAD
-        self.val_id = val_samples
-        train_data = self.data.sel(image_id=self.data.image_id[[el not in val_samples for el in self.data.sample]])
-
-        X_train = train_data.greyscale.values
-        y_train = train_data.lifetime.values
-
-        if len(val_samples) > 0:
-            val_data = self.data.sel(image_id=self.data.image_id[[el in val_samples for el in self.data.sample]])
-            validation_data = (val_data.greyscale.values, val_data.lifetime.values)
-        else:
-            val_data = None
-=======
-
-        self.train_idx = np.argwhere([sample not in val_samples for sample in self.data['sample']]).ravel()
-        self.val_idx = np.argwhere([sample in val_samples for sample in self.data['sample']]).ravel() \
+        self.val_samples = val_samples
+        self.train_idx = np.argwhere([sample not in self.val_samples for sample in self.data['sample']]).ravel()
+        self.val_idx = np.argwhere([sample in self.val_samples for sample in self.data['sample']]).ravel() \
             if len(val_samples) > 0 else None
-
 
         X_train = self.data['greyscale'][self.train_idx]
         y_train = self.data['lifetime'][self.train_idx]
@@ -67,7 +53,6 @@ class Estimator:
         if len(val_samples) > 0:
             validation_data = (self.data['greyscale'][self.val_idx], self.data['lifetime'][self.val_idx])
         else:
->>>>>>> f5771c76b16851ad3f8c82d8ce373ea102de1da6
             validation_data = None
 
         self.history = self.model.training_model.fit(
@@ -149,18 +134,26 @@ class Estimator:
                 tf.keras.metrics.mean_absolute_error
             ],
         )
-        
+
     def predict(self,
-                val_samples,
-    ):
+                val_samples=None,
+                val_idx=None
+                ):
         '''
-        predicts a set of input samples
+        predicts a set of input samples. If both samples and idx are None then use saved val_idx.
+        Only one of samples and idx can be non-None.
         '''
-        if len(val_samples) > 0:
+        if val_samples is not None and val_idx is not None:
+            raise ValueError('Only one of sample names or idx can be non-None')
+        if val_samples is not None:
             val_idx = np.argwhere([sample in val_samples for sample in self.data['sample']]).ravel()
+        # Use saved index if not specified by samples or idx
+        if val_idx is None:
+            print('Using saved val samples')
+            val_idx = self.val_idx.copy()
         y_pred = self.model.training_model.predict(self.data['greyscale'][val_idx])
         return y_pred
-        
+
     def compute_gradients_input(
             self,
             image_ids,

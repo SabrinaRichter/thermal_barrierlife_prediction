@@ -1,5 +1,8 @@
+import numpy as np
+
 from thermal_barrierlife_prediction import EstimatorCNN
 from thermal_barrierlife_prediction.evaluation import performance_report
+
 
 class EnsembleEstimator:
 
@@ -29,12 +32,11 @@ class EnsembleEstimator:
                 self.estimators[estimator_name].append(estim)
 
     def evaluate_models(
-        self,
+            self,
     ):
         for model_type in self.estimators.keys():
             for estim in self.estimators[model_type]:
-                val_samples = np.unique(estim.val_id)
-                y_pred = estim.predict(val_samples)
-                y_true = estim.data.sel(image_id=estim.data.image_id[[el in val_samples for el in estim.data.sample]]).lifetime.values
-                y_mag = estim.data.sel(image_id=estim.data.image_id[[el in val_samples for el in estim.data.sample]]).magnification.values
+                y_pred = estim.predict(val_idx=estim.val_idx)  # Predicts with saved val data
+                y_true = estim.data['lifetime'][estim.val_idx]
+                y_max = estim.data['magnification'][estim.val_idx]
                 estim.performance_report = performance_report

@@ -1,3 +1,4 @@
 tensorflow
 Pillow
 pandas
+sklearn

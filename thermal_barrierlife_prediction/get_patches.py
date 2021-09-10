@@ -1,9 +1,6 @@
-from load_data import read_data
-from sklearn.model_selection import train_test_split
-import matplotlib.pyplot as plt
+from thermal_barrierlife_prediction.load_data import read_data
 import numpy as np
 import random
-import xarray as xr
 
 def get_patches_tf(patch_width = 256, num_patches = 100):
     """
@@ -49,10 +46,11 @@ def get_patches( patch_width = 256, num_patches = 100):
             y_uncert[i*num_patches + num_selected]      = U[i]
             #generate random index
             num_selected +=1
-    
-    patch_ds = xr.Dataset({'patches':xr.DataArray(x_patches)})
-    patch_ds['uncertainty'] = xr.DataArray(y_lifetime)
-    patch_ds['lifetime']    = xr.DataArray(y_uncert)
+
+    patch_ds = dict()
+    patch_ds['patches'] = x_patches
+    patch_ds['uncertainty'] = y_uncert
+    patch_ds['lifetime'] = y_lifetime
 
     return patch_ds
 
@@ -60,5 +58,5 @@ def get_patches( patch_width = 256, num_patches = 100):
 # examples:
 # from get_patches import get_patches
 # patch_ds = get_patches(patch_width = 256, num_patches = 50 )
-# patch_ds["lifetime"].to_numpy().shape
+# patch_ds["lifetime"].shape
 #
