@@ -1,54 +1,133 @@
 import tensorflow as tf
 
 
+class Convolution(tf.keras.layers.Layer):
+    def __init__(
+            self,
+            layer_type: str,
+            filters: list,
+            activation: str,
+            kernel_size: list,
+            strides: list,
+            pool_size: list,
+            pool_strides: list,
+            padding='same',
+            dtype="float32",
+            **kwargs
+    ):
+
+        super(Convolution, self).__init__(dtype=dtype, **kwargs)
+        self.fwd_pass = []
+
+        for i in range(len(filters)):
+            if layer_type == 'mix_pool':
+                self.fwd_pass.append(ConvolutionMixedPooling(
+                    filters=filters[i],
+                    activation=activation,
+                    kernel_size=kernel_size[i],
+                    strides=strides[i],
+                    max_pool_pool_size=pool_size[i],
+                    max_pool_strides=pool_strides[i],
+                    avg_pool_pool_size=pool_size[i],
+                    avg_pool_strides=pool_strides[i],
+                    padding=padding,
+                    dtype=dtype,
+                ))
+            elif layer_type == 'max_pool':
+                self.fwd_pass.append(ConvolutionPooling(
+                    filters=filters[i],
+                    activation=activation,
+                    kernel_size=kernel_size[i],
+                    strides=strides[i],
+                    pool_type='max',
+                    pool_size=pool_size[i],
+                    pool_strides=pool_strides[i],
+                    padding=padding,
+                    dtype="float32",
+                ))
+            else:
+                raise ValueError('Layer type unrecognised')
+        self.fwd_pass.append(tf.keras.layers.Flatten())
+
+    def call(self, inputs, **kwargs):
+        x = inputs
+        x = tf.expand_dims(x, axis=3)
+        for layer in self.fwd_pass:
+            x = layer(x)
+        return x
+
+
 class ConvolutionMixedPooling(tf.keras.layers.Layer):
     def __init__(
             self,
-            n_layers: int,
             filters: int,
+            activation: str,
             kernel_size: tuple,
             strides: tuple,
             max_pool_pool_size: tuple,
             max_pool_strides: tuple,
             avg_pool_pool_size: tuple,
             avg_pool_strides: tuple,
+            padding:str,
             dtype="float32",
             **kwargs
     ):
-
         super(ConvolutionMixedPooling, self).__init__(dtype=dtype, **kwargs)
-        self.fwd_pass_conv = []
-        self.fwd_pass_maxpool = []
-        self.fwd_pass_avgpool = []
-        self.fwd_pass_mix = []
-        self.n_layers = n_layers
 
-        for i in range(self.n_layers):
-            self.fwd_pass_conv.append(
-                tf.keras.layers.Conv2D(
-                    name='conv_'+str(i),
-                    filters=filters, kernel_size=kernel_size, strides=strides,
-                ))
-            self.fwd_pass_avgpool.append(tf.keras.layers.AveragePooling2D(
-                name='avgpool_' + str(i),
-                pool_size=avg_pool_pool_size, strides=avg_pool_strides,
-            ))
-            self.fwd_pass_maxpool.append(tf.keras.layers.MaxPool2D(
-                name='maxpool_' + str(i),
-                pool_size=max_pool_pool_size, strides=max_pool_strides,
-            ))
-            self.fwd_pass_mix.append(MixChannels(n_channels=2, dtype=dtype, name='mix_'+str(i)))
-        self.flatten = tf.keras.layers.Flatten()
+        self.conv = tf.keras.layers.Conv2D(
+            filters=filters, kernel_size=kernel_size, strides=strides, activation=activation,padding=padding,
+        )
+        self.avgpool = tf.keras.layers.AveragePooling2D(
+            pool_size=avg_pool_pool_size, strides=avg_pool_strides,
+        )
+        self.maxpool = tf.keras.layers.MaxPool2D(
+            pool_size=max_pool_pool_size, strides=max_pool_strides,
+        )
+        self.mix = MixChannels(n_channels=2, dtype=dtype)
 
     def call(self, inputs, **kwargs):
         x = inputs
-        x = tf.expand_dims(x, axis=3)
-        for i in range(self.n_layers):
-            x_conv = self.fwd_pass_conv[i](x)
-            x_maxpool = self.fwd_pass_maxpool[i](x_conv)
-            x_avgpool = self.fwd_pass_avgpool[i](x_conv)
-            x = self.fwd_pass_mix[i]([x_avgpool, x_maxpool])
-        x = self.flatten(x)
+        x_conv = self.conv(x)
+        x_maxpool = self.maxpool(x_conv)
+        x_avgpool = self.avgpool(x_conv)
+        x = self.mix([x_avgpool, x_maxpool])
+        return x
+
+
+class ConvolutionPooling(tf.keras.layers.Layer):
+    def __init__(
+            self,
+            filters: int,
+            activation: str,
+            kernel_size: tuple,
+            strides: tuple,
+            pool_type:str,
+            pool_size: tuple,
+            pool_strides: tuple,
+            padding:str,
+            dtype="float32",
+            **kwargs
+    ):
+        super(ConvolutionPooling, self).__init__(dtype=dtype, **kwargs)
+
+        self.conv = tf.keras.layers.Conv2D(
+            filters=filters, kernel_size=kernel_size, strides=strides, activation=activation,padding=padding
+        )
+        if pool_type=='avg':
+            self.pool = tf.keras.layers.AveragePooling2D(
+                pool_size=pool_size, strides=pool_strides,
+            )
+        elif pool_type =='max':
+            self.pool = tf.keras.layers.MaxPool2D(
+                pool_size=pool_size, strides=pool_strides,
+            )
+        else:
+            raise ValueError('Pooling operation not recognised')
+
+    def call(self, inputs, **kwargs):
+        x = inputs
+        x = self.conv(x)
+        x = self.pool(x)
         return x
 
 
@@ -79,8 +158,12 @@ class MixChannels(tf.keras.layers.Layer):
         # Multiply each channel with weight and sum channels
         x = None
         for i, channel in enumerate(inputs):
+            # Do not allow zero weights (would loose output from that point on)
+            w = ws[i]
+            if w == 0:
+                w = 1e-16
             channel = tf.math.scalar_mul(
-                ws[i], channel
+                w, channel
             )
             if x is None:
                 x = channel
@@ -90,64 +173,64 @@ class MixChannels(tf.keras.layers.Layer):
 
 
 # UNIMPLEMENTED!!!! TODO
-class ConvolutionChannels(tf.keras.layers.Layer):
-
-    def __init__(
-            self,
-            n_layers: int,
-            filters: int,
-            kernel_size: tuple,
-            strides: tuple,
-            max_pool: bool,
-            avg_pool: bool,
-            max_pool_pool_size: tuple,
-            max_pool_strides: tuple,
-            avg_pool_pool_size: tuple,
-            avg_pool_strides: tuple,
-            dtype="float32",
-            **kwargs
-    ):
-        raise NotImplementedError('Not implemented')
-
-        super(ConvolutionChannels, self).__init__(dtype=dtype, **kwargs)
-        self.fwd_pass_channels = {}
-        # If using pooling make separate convolution layers for each each pooling type
-        if max_pool:
-            self.fwd_pass_channels['max_pool'] = []
-        if avg_pool:
-            self.fwd_pass_channels['avg_pool'] = []
-        # If no pooling is used use only convolution layers
-        if len(self.fwd_pass_channels) < 0:
-            self.fwd_pass_channels['bare_conv'] = []
-
-        for i in range(n_layers):
-            if 'max_pool' in self.fwd_pass_channels:
-                self.fwd_pass_channels['max_pool'].append(
-                    tf.keras.layers.Conv2D(
-                        filters=filters, kernel_size=kernel_size, strides=strides,
-                    ))
-                self.fwd_pass_channels['max_pool'].append(tf.keras.layers.MaxPool2D(
-                    pool_size=max_pool_pool_size, strides=max_pool_strides,
-                ))
-            if 'avg_pool' in self.fwd_pass_channels:
-                self.fwd_pass_channels['avg_pool'].append(
-                    tf.keras.layers.Conv2D(
-                        filters=filters, kernel_size=kernel_size, strides=strides,
-                    ))
-                self.fwd_pass_channels['avg_pool'].append(tf.keras.layers.AveragePool2D(
-                    pool_size=avg_pool_pool_size, strides=avg_pool_strides,
-                ))
-            if 'bare_conv' in self.fwd_pass_channels:
-                self.fwd_pass_channels['bare_conv'].append(
-                    tf.keras.layers.Conv2D(
-                        filters=filters, kernel_size=kernel_size, strides=strides,
-                    ))
-
-    def call(self, inputs, **kwargs):
-        # IDea pass through all channels and concat
-        x_all = []
-        for channel, layers in self.fwd_pass_channels.items():
-            x = inputs
+# class ConvolutionChannels(tf.keras.layers.Layer):
+#
+#     def __init__(
+#             self,
+#             n_layers: int,
+#             filters: int,
+#             kernel_size: tuple,
+#             strides: tuple,
+#             max_pool: bool,
+#             avg_pool: bool,
+#             max_pool_pool_size: tuple,
+#             max_pool_strides: tuple,
+#             avg_pool_pool_size: tuple,
+#             avg_pool_strides: tuple,
+#             dtype="float32",
+#             **kwargs
+#     ):
+#         raise NotImplementedError('Not implemented')
+#
+#         super(ConvolutionChannels, self).__init__(dtype=dtype, **kwargs)
+#         self.fwd_pass_channels = {}
+#         # If using pooling make separate convolution layers for each each pooling type
+#         if max_pool:
+#             self.fwd_pass_channels['max_pool'] = []
+#         if avg_pool:
+#             self.fwd_pass_channels['avg_pool'] = []
+#         # If no pooling is used use only convolution layers
+#         if len(self.fwd_pass_channels) < 0:
+#             self.fwd_pass_channels['bare_conv'] = []
+#
+#         for i in range(n_layers):
+#             if 'max_pool' in self.fwd_pass_channels:
+#                 self.fwd_pass_channels['max_pool'].append(
+#                     tf.keras.layers.Conv2D(
+#                         filters=filters, kernel_size=kernel_size, strides=strides,
+#                     ))
+#                 self.fwd_pass_channels['max_pool'].append(tf.keras.layers.MaxPool2D(
+#                     pool_size=max_pool_pool_size, strides=max_pool_strides,
+#                 ))
+#             if 'avg_pool' in self.fwd_pass_channels:
+#                 self.fwd_pass_channels['avg_pool'].append(
+#                     tf.keras.layers.Conv2D(
+#                         filters=filters, kernel_size=kernel_size, strides=strides,
+#                     ))
+#                 self.fwd_pass_channels['avg_pool'].append(tf.keras.layers.AveragePool2D(
+#                     pool_size=avg_pool_pool_size, strides=avg_pool_strides,
+#                 ))
+#             if 'bare_conv' in self.fwd_pass_channels:
+#                 self.fwd_pass_channels['bare_conv'].append(
+#                     tf.keras.layers.Conv2D(
+#                         filters=filters, kernel_size=kernel_size, strides=strides,
+#                     ))
+#
+#     def call(self, inputs, **kwargs):
+#         # IDea pass through all channels and concat
+#         x_all = []
+#         for channel, layers in self.fwd_pass_channels.items():
+#             x = inputs
 
 
 class DenseEncoderDecoder(tf.keras.layers.Layer):
@@ -160,10 +243,12 @@ class DenseEncoderDecoder(tf.keras.layers.Layer):
     def __init__(
             self,
             units,
-            initializer,
             l1_coef: float,
             l2_coef: float,
             activation: str,
+            kernel_initializer='glorot_uniform',
+            bias_initializer='zeros',
+            regularize:bool=False,
             norm: bool = False,
             dropout_rate: float = 0.0,
             dtype="float32",
@@ -193,10 +278,10 @@ class DenseEncoderDecoder(tf.keras.layers.Layer):
                 tf.keras.layers.Dense(
                     units=x,
                     activation=activation,
-                    kernel_initializer=initializer,
-                    bias_initializer=initializer,
-                    kernel_regularizer=tf.keras.regularizers.l1_l2(l1=l1_coef, l2=l2_coef),
-                    bias_regularizer=tf.keras.regularizers.l1_l2(l1=l1_coef, l2=l2_coef),
+                    kernel_initializer=kernel_initializer,
+                    bias_initializer=bias_initializer,
+                    kernel_regularizer=tf.keras.regularizers.l1_l2(l1=l1_coef, l2=l2_coef) if regularize else None,
+                    bias_regularizer=tf.keras.regularizers.l1_l2(l1=l1_coef, l2=l2_coef) if regularize else None,
                 )
             )
             # Batch normalisation
@@ -222,9 +307,10 @@ class Prediction(tf.keras.layers.Layer):
 
     def __init__(
             self,
-            initializer,
-            activation: str,
             split_output: bool,
+            kernel_initializer= 'glorot_uniform',
+            bias_initializer='zeros',
+            activation: str = 'linear',
             dtype="float32",
             **kwargs
     ):
@@ -246,21 +332,17 @@ class Prediction(tf.keras.layers.Layer):
         :param kwargs:
         """
         super(Prediction, self).__init__(dtype=dtype, **kwargs)
-        self.fwd_pass = []
-        self.fwd_pass.append(
-            tf.keras.layers.Dense(
+        self.layer = tf.keras.layers.Dense(
                 units=1 if not split_output else 2,
                 activation=activation,
-                kernel_initializer=initializer,
-                bias_initializer=initializer,
+                kernel_initializer=kernel_initializer,
+                bias_initializer=bias_initializer,
             )
-        )
-        self.split_output=split_output
+        self.split_output = split_output
 
     def call(self, inputs, **kwargs):
         x = inputs
-        for layer in self.fwd_pass:
-            x = layer(x)
+        x = self.layer(x)
         if self.split_output:  # Used to generate two moments per output node, e.g. for variational posteriors.
             x = tf.split(x, num_or_size_splits=2, axis=1)
             # Overwrite scale model if scale is constant:

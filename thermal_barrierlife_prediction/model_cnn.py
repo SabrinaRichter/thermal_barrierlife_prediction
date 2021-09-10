@@ -1,6 +1,6 @@
 import tensorflow as tf
 
-from thermal_barrierlife_prediction.layers import ConvolutionMixedPooling, DenseEncoderDecoder, Prediction
+from thermal_barrierlife_prediction.layers import Convolution, DenseEncoderDecoder, Prediction
 
 
 class ModelCNN:
@@ -8,48 +8,57 @@ class ModelCNN:
     def __init__(
             self,
             input_shape,
-            n_conv=1,
-            #filters=1,
-            kernel_size=2,
-            strides=2,
-            max_pool_pool_size=2,
-            max_pool_strides=2,
-            avg_pool_pool_size=2,
-            avg_pool_strides=2,
-            units_dense=[20],
-            init_dense='ones',
+            layer_type='mix_pool',
+            filters=[4, 16, 32, 64],
+            kernel_size=[2, 2, 2, 2],
+            strides=[2, 2, 2, 2],
+            pool_size=[2, 2, 2, 2],
+            pool_strides=[2, 2, 2, 2],
+            padding='same',
+            activation_conv='relu',
+            units_dense=[100],
+            init_kernel_dense='glorot_uniform',
+            init_bias_dense='zeros',
+            regularize_dense=False,
             l1_dense=0.0,
             l2_dense=0.0,
-            activation_dense='linear',
-            init_pred='ones',
+            activation_dense='relu',
+            init_kernel_pred='glorot_uniform',
+            init_bias_pred='zeros',
             activation_pred='linear',
             split_output=False
     ):
         """
         Creates the tf model.
+        :param layer_type: Convolution layer type: mix_pool or max_pool
         """
+        if len(filters) != len(kernel_size) != strides != len(pool_size) != len(pool_strides):
+            raise ValueError('Filter, kernel, pool, and stride lists should have same legnth')
 
         input_x = tf.keras.layers.Input(
             shape=input_shape,
         )
         x = input_x
-        x = ConvolutionMixedPooling(
-            n_layers=n_conv,
-            filters=1,
+        x = Convolution(
+            layer_type=layer_type,
+            filters=filters,
+            activation=activation_conv,
             kernel_size=kernel_size,
             strides=strides,
-            max_pool_pool_size=max_pool_pool_size,
-            max_pool_strides=max_pool_strides,
-            avg_pool_pool_size=avg_pool_pool_size,
-            avg_pool_strides=avg_pool_strides)(x)
+            pool_size=pool_size,
+            pool_strides=pool_strides,
+            padding=padding)(x)
         x = DenseEncoderDecoder(
             units=units_dense,
-            initializer=init_dense,
+            kernel_initializer=init_kernel_dense,
+            bias_initializer=init_bias_dense,
+            regularize=regularize_dense,
             l1_coef=l1_dense,
             l2_coef=l2_dense,
             activation=activation_dense)(x)
         output = Prediction(
-            initializer=init_pred,
+            kernel_initializer=init_kernel_pred,
+            bias_initializer=init_bias_pred,
             activation=activation_pred,
             split_output=split_output)(x)
         self.training_model = tf.keras.models.Model(
