@@ -34,13 +34,13 @@ class Estimator:
         """
         Trains the model.
         """
-        self.train_data = self.data.sel(image_id=self.data.image_id[[el not in ['M-19-271'] for el in self.data.sample]])
+        self.train_data = self.data.sel(image_id=self.data.image_id[[el not in val_samples for el in self.data.sample]])
 
         X_train = self.train_data.greyscale.values
         y_train = self.train_data.lifetime.values
 
         if len(val_samples) > 0:
-            self.val_data = self.data.sel(image_id=self.data.image_id[[el in ['M-19-271'] for el in self.data.sample]])
+            self.val_data = self.data.sel(image_id=self.data.image_id[[el in val_samples for el in self.data.sample]])
             validation_data = (self.val_data.greyscale.values, self.val_data.lifetime.values)
         else:
             self.val_data = None
@@ -70,7 +70,18 @@ class Estimator:
                 tf.keras.metrics.mean_absolute_error
             ],
         )
-
+        
+    def predict(self,
+                val_samples,
+    ):
+        '''
+        predicts a set of input samples
+        '''
+        if len(val_samples) > 0:
+            val_data = self.data.sel(image_id=self.data.image_id[[el in val_samples for el in self.data.sample]])
+        y_pred = self.model.training_model.predict(val_data.greyscale.values)
+        return y_pred
+        
     def compute_gradients_input(
             self,
             image_ids,
