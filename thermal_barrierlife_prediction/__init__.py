@@ -1,1 +1,2 @@
 from thermal_barrierlife_prediction.estimator_cnn import EstimatorCNN
+from thermal_barrierlife_prediction.ensemble_estimator import EnsembleEstimator
