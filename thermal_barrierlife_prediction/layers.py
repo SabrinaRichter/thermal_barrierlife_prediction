@@ -2,6 +2,10 @@ import tensorflow as tf
 
 
 class Convolution(tf.keras.layers.Layer):
+    """
+    Convolution stack with different layer types
+    """
+
     def __init__(
             self,
             layer_type: str,
@@ -58,6 +62,10 @@ class Convolution(tf.keras.layers.Layer):
 
 
 class ConvolutionMixedPooling(tf.keras.layers.Layer):
+    """
+    Convolution layer that mixes max and avg pooling with learned weight
+    """
+
     def __init__(
             self,
             filters: int,
@@ -68,14 +76,14 @@ class ConvolutionMixedPooling(tf.keras.layers.Layer):
             max_pool_strides: tuple,
             avg_pool_pool_size: tuple,
             avg_pool_strides: tuple,
-            padding:str,
+            padding: str,
             dtype="float32",
             **kwargs
     ):
         super(ConvolutionMixedPooling, self).__init__(dtype=dtype, **kwargs)
 
         self.conv = tf.keras.layers.Conv2D(
-            filters=filters, kernel_size=kernel_size, strides=strides, activation=activation,padding=padding,
+            filters=filters, kernel_size=kernel_size, strides=strides, activation=activation, padding=padding,
         )
         self.avgpool = tf.keras.layers.AveragePooling2D(
             pool_size=avg_pool_pool_size, strides=avg_pool_strides,
@@ -95,29 +103,36 @@ class ConvolutionMixedPooling(tf.keras.layers.Layer):
 
 
 class ConvolutionPooling(tf.keras.layers.Layer):
+    """
+    Convolution layer with max or abs pooling
+    """
+
     def __init__(
             self,
             filters: int,
             activation: str,
             kernel_size: tuple,
             strides: tuple,
-            pool_type:str,
+            pool_type: str,
             pool_size: tuple,
             pool_strides: tuple,
-            padding:str,
+            padding: str,
             dtype="float32",
             **kwargs
     ):
+        """
+        :param pool_type: max or avg
+        """
         super(ConvolutionPooling, self).__init__(dtype=dtype, **kwargs)
 
         self.conv = tf.keras.layers.Conv2D(
-            filters=filters, kernel_size=kernel_size, strides=strides, activation=activation,padding=padding
+            filters=filters, kernel_size=kernel_size, strides=strides, activation=activation, padding=padding
         )
-        if pool_type=='avg':
+        if pool_type == 'avg':
             self.pool = tf.keras.layers.AveragePooling2D(
                 pool_size=pool_size, strides=pool_strides,
             )
-        elif pool_type =='max':
+        elif pool_type == 'max':
             self.pool = tf.keras.layers.MaxPool2D(
                 pool_size=pool_size, strides=pool_strides,
             )
@@ -133,7 +148,7 @@ class ConvolutionPooling(tf.keras.layers.Layer):
 
 class MixChannels(tf.keras.layers.Layer):
     """
-
+    Weighted sum of multiple matrices of same size
     """
 
     def __init__(
@@ -235,9 +250,7 @@ class MixChannels(tf.keras.layers.Layer):
 
 class DenseEncoderDecoder(tf.keras.layers.Layer):
     """
-    Generator consisting of dense layers.
-
-    Maps from one domain to another: RNA -> metabolites or metabolites -> RNA in this model class.
+    Dense stack
     """
 
     def __init__(
@@ -248,7 +261,7 @@ class DenseEncoderDecoder(tf.keras.layers.Layer):
             activation: str,
             kernel_initializer='glorot_uniform',
             bias_initializer='zeros',
-            regularize:bool=False,
+            regularize: bool = False,
             norm: bool = False,
             dropout_rate: float = 0.0,
             dtype="float32",
@@ -256,20 +269,7 @@ class DenseEncoderDecoder(tf.keras.layers.Layer):
     ):
         """
 
-        :param units:
-        :param initializer:
-        :param l1_coef:
-        :param l2_coef:
-        :param norm:
-        :param activation: Activation function to use inside of stack. Used in last layer if inv_linker_loc is None.
-        :param dropout_rate:
-        :param inv_linker_loc: Output transformation of mean (or point estimator) tensor. Leave None to use activation.
-        :param inv_linker_scale: Output transformation of mean (or point estimator) tensor.
-            Leave None if split_output is False.
-        :param split_output: Whether to generate output of twice reqiured length for variational posterior
-            (location and scale output).
-        :param dtype:
-        :param kwargs:
+
         """
         super(DenseEncoderDecoder, self).__init__(dtype=dtype, **kwargs)
         self.fwd_pass = []
@@ -304,11 +304,14 @@ class DenseEncoderDecoder(tf.keras.layers.Layer):
 
 
 class Prediction(tf.keras.layers.Layer):
+    """
+    Prediction layer with 1 (e.g. mean) or 2 (e.g. mean and std) outputs
+    """
 
     def __init__(
             self,
             split_output: bool,
-            kernel_initializer= 'glorot_uniform',
+            kernel_initializer='glorot_uniform',
             bias_initializer='zeros',
             activation: str = 'linear',
             dtype="float32",
@@ -316,28 +319,15 @@ class Prediction(tf.keras.layers.Layer):
     ):
         """
 
-        :param units:
-        :param initializer:
-        :param l1_coef:
-        :param l2_coef:
-        :param norm:
-        :param activation: Activation function to use inside of stack. Used in last layer if inv_linker_loc is None.
-        :param dropout_rate:
-        :param inv_linker_loc: Output transformation of mean (or point estimator) tensor. Leave None to use activation.
-        :param inv_linker_scale: Output transformation of mean (or point estimator) tensor.
-            Leave None if split_output is False.
-        :param split_output: Whether to generate output of twice reqiured length for variational posterior
-            (location and scale output).
-        :param dtype:
-        :param kwargs:
+        :param split_output: Output 1 or 2 values
         """
         super(Prediction, self).__init__(dtype=dtype, **kwargs)
         self.layer = tf.keras.layers.Dense(
-                units=1 if not split_output else 2,
-                activation=activation,
-                kernel_initializer=kernel_initializer,
-                bias_initializer=bias_initializer,
-            )
+            units=1 if not split_output else 2,
+            activation=activation,
+            kernel_initializer=kernel_initializer,
+            bias_initializer=bias_initializer,
+        )
         self.split_output = split_output
 
     def call(self, inputs, **kwargs):

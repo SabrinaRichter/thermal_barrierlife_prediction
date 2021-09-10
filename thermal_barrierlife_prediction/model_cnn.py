@@ -39,6 +39,8 @@ class ModelCNN:
             shape=input_shape,
         )
         x = input_x
+
+        # Pass through layer stacks
         x = Convolution(
             layer_type=layer_type,
             filters=filters,
@@ -61,6 +63,8 @@ class ModelCNN:
             bias_initializer=init_bias_pred,
             activation=activation_pred,
             split_output=split_output)(x)
+
+        # Training model
         self.training_model = tf.keras.models.Model(
             inputs=[input_x],
             outputs=output,
