@@ -52,7 +52,7 @@ class FourierFeatureProjection(tf.keras.layers.Layer):
 
         else:
             initializer = tf.keras.initializers.TruncatedNormal(mean=0.0, stddev=self.gauss_scale)
-            self.proj_kernel = tf.keras.layers.Dense(self.gauss_proj, use_bias=False, trainable=False,
+            self.proj_kernel = tf.keras.layers.Dense(self.gauss_proj, use_bias=False, trainable=True,
                                                      kernel_initializer=initializer, dtype=self._kernel_dtype)
 
         self.built = True
