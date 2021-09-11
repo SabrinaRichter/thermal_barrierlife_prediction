@@ -44,5 +44,5 @@ def read_data(csv_file_path=False, tiff_folder_path='../data/train/'):
                   magnification=df_meta.Magnification.values.ravel() if 'Magnification' in df_meta.columns else None,
                   uncertainty=df_meta.Uncertainty.values.ravel() if 'Uncertainty' in df_meta.columns else None,
                   image_id=df_meta.Image_ID.values.ravel() if 'Image_ID' in df_meta.columns else None,
-                  real=np.full_like(np.array(df_meta.Sample.values.ravel()), 1))
+                  real=np.full_like(np.array(df_meta.index.values.ravel()), 1))
     return ds
