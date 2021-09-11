@@ -1,4 +1,4 @@
-# thermal_barrierlife_prediction
+# H^3 Hackathon 2021: One-Hot-Encoating
 
 This is the result of the 'One-Hot-Encoating' team (Karin Hrovatin, Julius Polz, Nikolay Garabedian, Jazib Hassan, Ke Li, Sabrina Richter) for The Thermal Barrier Life Prediction Challenge (https://data-challenges.fz-juelich.de/web/challenges/challenge-page/84/overview) in the scope of the Helmholtz Herbst Hackathon 2021. All our model versions do several predictions on random crops of the same input image and aggregate these predictions to the median value. Model extensions include working on Fourier-Transformed images, including mixup samples during training and using the magnification as covariate in the dense part of the model.
 
