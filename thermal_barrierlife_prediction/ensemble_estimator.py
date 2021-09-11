@@ -16,7 +16,7 @@ class EnsembleEstimator:
     ):
         for val_set in val_sets:
             for estimator_name, args in estimator_args:
-                if estimator_name == 'CNN':
+                if 'CNN' in estimator_name:
                     estim = EstimatorCNN()
                 else:
                     raise ValueError('Estimator not recognized!')

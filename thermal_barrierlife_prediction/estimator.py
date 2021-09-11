@@ -151,8 +151,8 @@ class Estimator:
         if val_idx is None:
             print('Using saved val samples')
             val_idx = self.val_idx.copy()
-        y_pred = self.model.training_model.predict(self.data['greyscale'][val_idx])
-        return y_pred
+        y_pred = self.model.training_model.predict(self.data['greyscale'][val_idx], batch_size=8)
+        return y_pred.flatten()
 
     def compute_gradients_input(
             self,
