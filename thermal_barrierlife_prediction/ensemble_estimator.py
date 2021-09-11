@@ -84,7 +84,8 @@ class EnsembleEstimator:
             estim=res['estim']            
             y_pred = []
             for i in range(runs):
-                y_pred.append(estim.predict(val_data=val_data))  # Predicts with saved val data
+                y_pred.append(estim.predict(val_idx=estim.val_idx))  # Predicts with saved val data
+#             print(np.array(y_pred)[:, 5])
             y_pred = np.mean(np.array(y_pred), axis=0)
             y_true = estim.data['lifetime'][estim.val_idx]
             y_max = estim.data['magnification'][estim.val_idx]
@@ -110,6 +111,6 @@ class EnsembleEstimator:
         y_model_avg = np.array(y_model_avg)
         for i,w in enumerate(model_weights):
             y_model_avg[i] = w*y_model_avg[i]
-        y_pred = np.mean(y_model_avg, axis=0)
+        y_pred = np.sum(y_model_avg, axis=0)
         print(y_pred.shape)
         return y_pred

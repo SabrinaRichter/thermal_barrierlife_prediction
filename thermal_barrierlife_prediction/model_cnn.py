@@ -12,8 +12,8 @@ class ModelCNN:
             self,
             input_shape,
             layer_type='mix_pool',
-            filters=[2, 4, 8,16],
-            kernel_size=[2, 2, 2, 2],
+            filters=[8, 16, 32, 64],
+            kernel_size=[3, 3, 3, 3],
             strides=[1, 1, 1, 1],
             pool_size=[2, 2, 2, 2],
             pool_strides=[2, 2, 2, 2],
@@ -29,10 +29,11 @@ class ModelCNN:
             init_kernel_pred='glorot_uniform',
             init_bias_pred='zeros',
             activation_pred='linear',
-            FGF_guassian_projection = 16,
+            FGF_guassian_projection = 8,
             FGF_scale = 10,
             crop_image_size = 256,
-            split_output=False
+            split_output=False,
+            do_fourier=True,
     ):
         """
         Creates the tf model.
@@ -48,9 +49,10 @@ class ModelCNN:
         )
         x = input_x
         x = tf.expand_dims(x,-1)
-        x = Fourier_Transformation.FourierFeatureProjection(
-                gaussian_projection=FGF_guassian_projection,
-                gaussian_scale=FGF_scale)(x)
+        if do_fourier:
+            x = Fourier_Transformation.FourierFeatureProjection(
+                    gaussian_projection=FGF_guassian_projection,
+                    gaussian_scale=FGF_scale)(x)
 
         x = tf.keras.layers.experimental.preprocessing.RandomCrop(height=crop_image_size,width=crop_image_size,seed=42)(x,training=True)
         
