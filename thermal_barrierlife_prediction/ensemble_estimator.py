@@ -81,8 +81,11 @@ class EnsembleEstimator:
             runs = 15,
     ):
         for res in self.res:
-            estim=res['estim']
-            y_pred = estim.predict(val_idx=estim.val_idx)  # Predicts with saved val data
+            estim=res['estim']            
+            y_pred = []
+            for i in range(runs):
+                y_pred.append(estim.predict(val_data=val_data))  # Predicts with saved val data
+            y_pred = np.mean(np.array(y_pred), axis=0)
             y_true = estim.data['lifetime'][estim.val_idx]
             y_max = estim.data['magnification'][estim.val_idx]
             estim.performance_report = performance_report(y_true, y_pred)
