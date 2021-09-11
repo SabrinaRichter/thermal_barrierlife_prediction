@@ -104,7 +104,9 @@ class EnsembleEstimator:
             y_model_avg.append(np.mean(np.array(y_pred), axis=0))
             model_scores.append(1/estim.performance_report['mean_absolute_error'])
         model_weights = np.array(model_scores)/np.sum(model_scores)
-        y_pred = y_model_avg*model_weights
+        y_model_avg = np.array(y_model_avg)
+        for i,w in enumerate(model_weights):
+            y_model_avg[i] = w*y_model_avg[i]
+        y_pred = np.mean(y_model_avg, axis=0)
         print(y_pred.shape)
-        y_pred = np.mean(y_pred, axis=0)
         return y_pred
