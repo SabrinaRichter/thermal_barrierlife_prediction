@@ -136,6 +136,7 @@ class Estimator:
         )
 
     def predict(self,
+                val_data=None,
                 val_samples=None,
                 val_idx=None
                 ):
@@ -143,16 +144,20 @@ class Estimator:
         predicts a set of input samples. If both samples and idx are None then use saved val_idx.
         Only one of samples and idx can be non-None.
         '''
-        if val_samples is not None and val_idx is not None:
-            raise ValueError('Only one of sample names or idx can be non-None')
-        if val_samples is not None:
-            val_idx = np.argwhere([sample in val_samples for sample in self.data['sample']]).ravel()
-        # Use saved index if not specified by samples or idx
-        if val_idx is None:
-            print('Using saved val samples')
-            val_idx = self.val_idx.copy()
-        y_pred = self.model.training_model.predict(self.data['greyscale'][val_idx], batch_size=8)
+        if val_data is not None:
+            y_pred = self.model.training_model.predict(val_data)
+        else:
+            if val_samples is not None and val_idx is not None:
+                raise ValueError('Only one of sample names or idx can be non-None')
+            if val_samples is not None:
+                val_idx = np.argwhere([sample in val_samples for sample in self.data['sample']]).ravel()
+            # Use saved index if not specified by samples or idx
+            if val_idx is None:
+                print('Using saved val samples')
+                val_idx = self.val_idx.copy()
+            y_pred = self.model.training_model.predict(self.data['greyscale'][val_idx])
         return y_pred.flatten()
+
 
     def compute_gradients_input(
             self,

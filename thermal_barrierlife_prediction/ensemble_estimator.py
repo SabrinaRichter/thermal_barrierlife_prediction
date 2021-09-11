@@ -1,17 +1,15 @@
 import numpy as np
-
+from thermal_barrierlife_prediction.load_data import read_data
 from thermal_barrierlife_prediction import EstimatorCNN
-
 from thermal_barrierlife_prediction.evaluation import performance_report, performance_report_magnification
 from thermal_barrierlife_prediction.paralelise_utils import parallelize
-
+import os
 
 class Params:
     def __init__(self, val_set, estimator_name, args):
         self.val_set = val_set
         self.estimator_name = estimator_name
         self.args = args
-
 
 
 class EnsembleEstimator:
@@ -80,6 +78,7 @@ class EnsembleEstimator:
 
     def evaluate_models(
             self,
+            runs = 15,
     ):
         for res in self.res:
             estim=res['estim']
@@ -88,3 +87,24 @@ class EnsembleEstimator:
             y_max = estim.data['magnification'][estim.val_idx]
             estim.performance_report = performance_report(y_true, y_pred)
             estim.performance_report_magnification = performance_report_magnification(y_true, y_pred, y_max)
+
+
+    def predict_val(
+        self,
+        runs = 15,
+    ):
+        y_model_avg = []
+        model_scores = []
+        for res in self.res:
+            estim=res['estim']
+            val_data = read_data(csv_file_path=False, tiff_folder_path='../data/valid/')['greyscale']
+            y_pred = []
+            for i in range(runs):
+                y_pred.append(estim.predict(val_data=val_data))  # Predicts with saved val data
+            y_model_avg.append(np.mean(np.array(y_pred), axis=0))
+            model_scores.append(1/estim.performance_report['mean_absolute_error'])
+        model_weights = np.array(model_scores)/np.sum(model_scores)
+        y_pred = y_model_avg*model_weights
+        print(y_pred.shape)
+        y_pred = np.mean(y_pred, axis=0)
+        return y_pred
