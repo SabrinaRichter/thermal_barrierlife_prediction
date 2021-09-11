@@ -39,10 +39,10 @@ def read_data(csv_file_path=False, tiff_folder_path='../data/train/'):
                 im_list.append(np.array(im))
 
         ds = dict(greyscale=np.array(im_list),
-                  sample=df_meta.Sample.values.ravel(),
-                  lifetime=df_meta.Lifetime.values.ravel(),
-                  magnification=df_meta.Magnification.values.ravel(),
-                  uncertainty=df_meta.Uncertainty.values.ravel(),
-                  image_id=df_meta.Image_ID.values.ravel(),
+                  sample=df_meta.Sample.values.ravel() if 'Sample' in df_meta.columns else None,
+                  lifetime=df_meta.Lifetime.values.ravel() if 'Lifetime' in df_meta.columns else None,
+                  magnification=df_meta.Magnification.values.ravel() if 'Magnification' in df_meta.columns else None,
+                  uncertainty=df_meta.Uncertainty.values.ravel() if 'Uncertainty' in df_meta.columns else None,
+                  image_id=df_meta.Image_ID.values.ravel() if 'Image_ID' in df_meta.columns else None,
                   real=np.full_like(np.array(df_meta.Sample.values.ravel()), 1))
     return ds

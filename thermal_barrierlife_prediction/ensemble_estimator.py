@@ -101,7 +101,8 @@ class EnsembleEstimator:
         model_scores = []
         for res in self.res:
             estim=res['estim']
-            val_data = read_data(csv_file_path=False, tiff_folder_path='../data/valid/')['greyscale']
+            val_data = read_data(csv_file_path='../data/submission_valid.csv',
+                                 tiff_folder_path='../data/valid/')
             y_pred = []
             for i in range(runs):
                 y_pred.append(estim.predict(val_data=val_data))  # Predicts with saved val data

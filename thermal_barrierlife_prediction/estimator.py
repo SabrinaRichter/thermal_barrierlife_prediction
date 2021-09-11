@@ -139,7 +139,7 @@ class Estimator:
         )
 
     def predict(self,
-                val_data=None,
+                val_data: dict = None,
                 val_samples=None,
                 val_idx=None
                 ):
@@ -148,7 +148,7 @@ class Estimator:
         Only one of samples and idx can be non-None.
         '''
         if val_data is not None:
-            y_pred = self.model.training_model.predict(val_data)
+            data = (val_data['greyscale'], val_data['magnification'].reshape(-1, 1))
         else:
             if val_samples is not None and val_idx is not None:
                 raise ValueError('Only one of sample names or idx can be non-None')
@@ -158,9 +158,9 @@ class Estimator:
             if val_idx is None:
                 print('Using saved val samples')
                 val_idx = self.val_idx.copy()
-            y_pred = self.model.training_model.predict(self.data['greyscale'][val_idx])
+            data = (self.data['greyscale'][val_idx], self.data['magnification'][val_idx])
+        y_pred = self.model.training_model.predict(data)
         return y_pred.flatten()
-
 
     def compute_gradients_input(
             self,
