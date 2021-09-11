@@ -1,5 +1,7 @@
 # thermal_barrierlife_prediction
 
+This is the result of the 'One-Hot-Encoating' team (Karin Hrovatin, Julius Polz, Nikolay Garabedian, Jazib Hassan, Ke Li) for The Thermal Barrier Life Prediction Challenge (https://data-challenges.fz-juelich.de/web/challenges/challenge-page/84/overview) in the scope of the Helmholtz Herbst Hackathon 2021.
+
 ## links
 [slides for project flowcharts](https://docs.google.com/presentation/d/1TUbPHSYw5zZWDONORb0P053ieW91_Pb8aI3VtWpJl-s/edit?usp=sharing)
 
