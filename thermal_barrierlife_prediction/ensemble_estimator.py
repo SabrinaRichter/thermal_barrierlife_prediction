@@ -75,7 +75,7 @@ class EnsembleEstimator:
                 val_samples=val_set,
                 **args['train']
             )
-            res.append({'estim': estim, 'params': params})
+            res.append({'estim': estim, 'param': param})
         return res
 
     def evaluate_models(
