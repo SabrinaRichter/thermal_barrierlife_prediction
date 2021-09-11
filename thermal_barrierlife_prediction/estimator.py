@@ -48,15 +48,18 @@ class Estimator:
             if len(val_samples) > 0 else None
 
         X_train = self.data['greyscale'][self.train_idx]
+        X_train_cov = self.data['magnification'][self.train_idx].reshape(-1, 1)
         y_train = self.data['lifetime'][self.train_idx]
 
         if len(val_samples) > 0:
-            validation_data = (self.data['greyscale'][self.val_idx], self.data['lifetime'][self.val_idx])
+            validation_data = ((self.data['greyscale'][self.val_idx],
+                                self.data['magnification'][self.val_idx].reshape(-1, 1)),
+                               self.data['lifetime'][self.val_idx])
         else:
             validation_data = None
 
         self.history = self.model.training_model.fit(
-            x=X_train,
+            x=(X_train, X_train_cov),
             y=y_train,
             shuffle=True,
             epochs=epochs,
